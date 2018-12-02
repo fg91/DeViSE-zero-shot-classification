@@ -1,9 +1,11 @@
-FROM continuumio/anaconda3:4.4.0
+FROM pytorch/pytorch
 MAINTAINER UNP, https://unp.education
 EXPOSE 8000
 RUN apt-get update && apt-get install -y apache2 \
     apache2-dev \
     emacs \
+    python3 \
+    python3-pip\
     python3-dev \
  && apt-get clean \
  && apt-get autoremove \
