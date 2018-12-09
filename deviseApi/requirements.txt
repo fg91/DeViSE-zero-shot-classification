@@ -1,0 +1,8 @@
+annoy
+flask
+flasgger
+mod_wsgi
+fastai==0.7.0
+torchtext==0.2.3
+torch==0.4.1
+torchvision
