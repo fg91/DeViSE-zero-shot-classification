@@ -11,6 +11,10 @@ from PIL import Image
 from annoy import AnnoyIndex
 import io
 import os.path
+#import fastai
+from torchvision.models import resnet34
+#from fastai.layers import AdaptiveConcatPool2d, Flatten
+
 
 #device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 #device = torch.device("cpu")
@@ -21,9 +25,6 @@ def create_index(vecs, dim = 300):
         annoy_index.add_item(i, wordvec)
     annoy_index.build(10)
     return annoy_index
-
-app = Flask(__name__)
-swagger = Swagger(app)
 
 tfms = transforms.Compose([
     torchvision.transforms.Resize(224, interpolation=2),
@@ -44,7 +45,7 @@ data_not_normalized = torchvision.datasets.ImageFolder(root='valid/', transform=
 data_loader = torch.utils.data.DataLoader(data, batch_size=10)
 
 # Load classifier
-model = torch.load('model.pth', map_location='cpu')
+model = torch.load('scratch.pth', map_location='cpu')
 #model.to(device)
 model.eval()
 
@@ -89,6 +90,9 @@ def wordvec_to_images(wordvec, index):
     indcs = index.get_nns_by_vector(wordvec, 4)
     grid = torchvision.utils.make_grid(torch.tensor(np.stack([data_not_normalized[i][0] for i in indcs])))
     return Image.fromarray(np.uint8(grid.numpy()*255).transpose(1,2,0))
+
+app = Flask(__name__)
+swagger = Swagger(app)
 
 
 @app.route('/wordvec_2_image')
@@ -175,13 +179,13 @@ def zero_shot_prediction_categories():
         img = Image.open(request.files.get("input_image"))
     except:
         return "Could not open chosen image. Please choose a JPEG or PNG file."
-    try:
-        transformed_img = tfms(img)
-        pred = model(transformed_img.unsqueeze(0))
-        indcs = WordNet_index.get_nns_by_vector(pred[0], 5)
-        categories = classes[indcs]
-    except:
-        return "Prediction unsuccessful. Please choose a JPEG or PNG file."
+#    try:
+    transformed_img = tfms(img)
+    pred = model(transformed_img.unsqueeze(0))
+    indcs = WordNet_index.get_nns_by_vector(pred[0], 5)
+    categories = classes[indcs]
+#    except:
+#        return "Prediction unsuccessful. Please choose a JPEG or PNG file."
 
     return ' '.join([c for c in categories])
 
