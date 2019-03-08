@@ -11,10 +11,15 @@ from PIL import Image
 from annoy import AnnoyIndex
 import io
 import os.path
-#import fastai
 from torchvision.models import resnet34
-#from fastai.layers import AdaptiveConcatPool2d, Flatten
 
+app = Flask(__name__)
+app.config['SWAGGER'] = {
+    "swagger_version": "2.0",
+    "title": "DeViSE",
+    "description": "Zero-shot predictions based on the DeViSE - Deep Visual-Semantic Embedding Model by Fromme et al. (2013)"}
+
+swagger = Swagger(app)
 
 #device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 #device = torch.device("cpu")
@@ -39,18 +44,18 @@ tfms2 = transforms.Compose([
     transforms.ToTensor(),
 ])
 
-data = torchvision.datasets.ImageFolder(root='valid/', transform=tfms)
-data_not_normalized = torchvision.datasets.ImageFolder(root='valid/', transform=tfms2)
+data = torchvision.datasets.ImageFolder(root='pictures/', transform=tfms)
+data_not_normalized = torchvision.datasets.ImageFolder(root='pictures/', transform=tfms2)
 
 data_loader = torch.utils.data.DataLoader(data, batch_size=10)
 
 # Load classifier
-model = torch.load('scratch.pth', map_location='cpu')
+model = torch.load('devise_trained.pth', map_location='cpu')
 #model.to(device)
 model.eval()
 
 # Load WordNet wordvectors
-classId2wordvec = pickle.load(open('classId2wordvec.pkl', 'rb'))
+classId2wordvec = pickle.load(open('className_2_wordvec_without_dups.pkl', 'rb'))
 classes, wordvecs = zip(*classId2wordvec)
 classId2wordvec_dict = dict([(c,vw) for c, vw in zip(classes, wordvecs)])
 classes = np.array(classes)
@@ -91,15 +96,12 @@ def wordvec_to_images(wordvec, index):
     grid = torchvision.utils.make_grid(torch.tensor(np.stack([data_not_normalized[i][0] for i in indcs])))
     return Image.fromarray(np.uint8(grid.numpy()*255).transpose(1,2,0))
 
-app = Flask(__name__)
-swagger = Swagger(app)
-
-
 @app.route('/wordvec_2_image')
 def wordvec_to_image():
-    """
-    Returns images whose content is semantically similar to the chosen word (or words). If two words are chosen, their respective word vectors are averaged. Predictions are based on the DeViSE model that makes semantically relevant predictions [...] and generalizes to classes outside of its labeled training set, i.e. zero-shot learning (Frome et al. 2013).
-    ---                                                              
+    """Returns the four images from the stored dataset that are semantically most similar to the chosen word (or words). If two words are chosen, their respective word vectors are averaged.
+    ---
+    tags:
+    - DeViSE
     parameters:                                                      
     - name: category_1
       in: query                                                   
@@ -132,10 +134,12 @@ def wordvec_to_image():
                      attachment_filename='return.jpeg',
                      mimetype='image/jpeg')
 
-@app.route('/zero_shot_prediction_image', methods=["POST"])
-def zero_shot_prediction_image():
-    """Returns images that are semantically similar to the input image using predictions based on the DeViSE model that makes semantically relevant predictions [...] and generalizes to classes outside of its labeled training set, i.e. zero-shot learning (Frome et al. 2013).
-    ---                                                              
+@app.route('/zero_shot_prediction_images', methods=["POST"])
+def zero_shot_prediction_images():
+    """Returns the four images from the stored dataset that are semantically most similar to the input image.
+    ---
+    tags:
+    - DeViSE
     parameters:                                                      
     - name: input_image                                              
       in: formData                                                   
@@ -148,7 +152,7 @@ def zero_shot_prediction_image():
     try:
         img = Image.open(request.files.get("input_image"))
     except:
-        return "Could not open chosen image. Please choose a JPEG or PNG file."
+        return "Could not open chosen image. Please choose a JPEG file."
     try:
         transformed_img = tfms(img)
         pred = model(transformed_img.unsqueeze(0))
@@ -156,7 +160,7 @@ def zero_shot_prediction_image():
         imgByteArr = io.BytesIO()
         grid.save(imgByteArr, format='JPEG')
     except:
-        return "Prediction unsuccessful. Please choose a JPEG or PNG file."
+        return "Prediction unsuccessful. Please choose a JPEG file."
 
     return send_file(io.BytesIO(imgByteArr.getvalue()),
                      attachment_filename='return.jpeg',
@@ -164,8 +168,10 @@ def zero_shot_prediction_image():
 
 @app.route('/zero_shot_prediction_categories', methods=["POST"])
 def zero_shot_prediction_categories():
-    """Returns the five most likely categories for an input image using predictions based on the DeViSE model that makes semantically relevant predictions [...] and generalizes to classes outside of its labeled training set, i.e. zero-shot learning (Frome et al. 2013).
-    ---                                                              
+    """ Returns the top five zero-shot predictions for the input image.
+    ---
+    tags:
+    - DeViSE
     parameters:                                                      
     - name: input_image                                              
       in: formData                                                   
@@ -178,14 +184,14 @@ def zero_shot_prediction_categories():
     try:
         img = Image.open(request.files.get("input_image"))
     except:
-        return "Could not open chosen image. Please choose a JPEG or PNG file."
-#    try:
-    transformed_img = tfms(img)
-    pred = model(transformed_img.unsqueeze(0))
-    indcs = WordNet_index.get_nns_by_vector(pred[0], 5)
-    categories = classes[indcs]
-#    except:
-#        return "Prediction unsuccessful. Please choose a JPEG or PNG file."
+        return "Could not open chosen image. Please choose a JPEG file."
+    try:
+        transformed_img = tfms(img)
+        pred = model(transformed_img.unsqueeze(0))
+        indcs = WordNet_index.get_nns_by_vector(pred[0], 5)
+        categories = classes[indcs]
+    except:
+        return "Prediction unsuccessful. Please choose a JPEG file."
 
     return ' '.join([c for c in categories])
 
