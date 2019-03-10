@@ -50,7 +50,7 @@ data_not_normalized = torchvision.datasets.ImageFolder(root='pictures/', transfo
 data_loader = torch.utils.data.DataLoader(data, batch_size=10)
 
 # Load classifier
-model = torch.load('devise_trained.pth', map_location='cpu')
+model = torch.load('devise_trained_full_imagenet.pth', map_location='cpu')
 #model.to(device)
 model.eval()
 
