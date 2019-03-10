@@ -1,1 +1,1 @@
-# DeViSE-zero-shot-prediction
+# DeViSE-zero-shot-classification
