@@ -65,7 +65,7 @@ or like this:
 .
 .
 ```
-Folder and image names do not matter.
+Folder and image names within the folder `pictures` do not matter.
 
 Activate the virtual environment with `source activate DeViSE_env`, navigate to the folder `deviseApi` and run `python deviseApi.py`. In your browser go to `http://localhost:5000/apidocs/`.
 
