@@ -1,4 +1,5 @@
 # DeViSE: A Deep Visual-Semantic Embedding Model
+
 Zero-shot predictions based on the DeViSE - Deep Visual-Semantic Embedding Model by [Fromme et al. (2013)](https://papers.nips.cc/paper/5204-devise-a-deep-visual-semantic-embedding-model.pdf)
 
 [Try the model on AWS](http://ec2-18-195-116-70.eu-central-1.compute.amazonaws.com:8000/apidocs/)!
