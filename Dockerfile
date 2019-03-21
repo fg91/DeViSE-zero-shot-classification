@@ -1,5 +1,5 @@
 FROM pytorch/pytorch
-MAINTAINER UNP, https://unp.education
+MAINTAINER Fabio Graetz
 EXPOSE 8000
 RUN apt-get update && apt-get install -y apache2 \
     apache2-dev \
