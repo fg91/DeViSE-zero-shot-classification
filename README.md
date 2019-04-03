@@ -2,7 +2,7 @@
 
 Zero-shot predictions based on the DeViSE - Deep Visual-Semantic Embedding Model by [Fromme et al. (2013)](https://papers.nips.cc/paper/5204-devise-a-deep-visual-semantic-embedding-model.pdf)
 
-[Try the model on AWS](http://ec2-18-195-116-70.eu-central-1.compute.amazonaws.com:8000/apidocs/)!
+[Try the model on AWS](http://ec2-18-195-116-70.eu-central-1.compute.amazonaws.com:8000/apidocs/) or read my [blog post](https://towardsdatascience.com/devise-zero-shot-learning-c62eed17e93d)!
 
 DeViSE maps images into a rich semantic embedding space to combine the image recognition task with semantic information about the similarity of words/categories learned from language models. The method can make predictions about thousands of image labels not observed during training (zero-shot predictions).
 
